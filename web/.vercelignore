@@ -1,0 +1,5 @@
+# Secrets live in Vercel's environment variables, never in the upload.
+.env*
+!.env.local.example
+node_modules
+.next

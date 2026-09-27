@@ -1,0 +1,11 @@
+# Python environment and raw downloads (re-create with the steps in README.md)
+.venv/
+data-prep/raw/
+__pycache__/
+
+# Secrets: never commit env files (web/.env.local.example is the template)
+.env*
+!.env.local.example
+
+.DS_Store
+node_modules/

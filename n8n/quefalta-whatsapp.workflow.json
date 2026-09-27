@@ -1,0 +1,180 @@
+{
+  "name": "QueFalta · WhatsApp",
+  "nodes": [
+    {
+      "id": "4afbe89f-3d6b-4b64-9db0-311d5fbf3e62",
+      "name": "Zavu: mensaje entrante",
+      "webhookId": "55ccbdb1-9c0a-4ec2-b3c4-f668ced4dc10",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "quefalta-zavu",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1366ed0-aa27-4d20-9049-9cbc923e740d",
+      "name": "QueFalta: decidir respuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://quefalta.vercel.app/api/wa-bot",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "4b88c8c7-02ce-4e9c-93dc-946f434a4ef8",
+      "name": "Separar mensajes",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        520,
+        200
+      ],
+      "parameters": {
+        "fieldToSplitOut": "messages",
+        "options": {}
+      }
+    },
+    {
+      "id": "0c968111-7841-47d3-bb8c-a714d16b6a7a",
+      "name": "Zavu: enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.zavu.dev/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "eAIQnkojksjtKmL3",
+          "name": "Zavu API (QueFalta)"
+        }
+      }
+    },
+    {
+      "id": "8a410d31-8c36-45f4-9b80-a68b29bb5715",
+      "name": "¿Pide un plan?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -40
+      ],
+      "parameters": {
+        "jsCode": "// Runs before anything else: if the user asked for a plan, acknowledge immediately.\nconst ev = $input.first().json.body || {};\nconst d = ev.data || {};\nconst picked = (d.content && d.content.interactiveReply && d.content.interactiveReply.id) || '';\nconst asksPlan = ev.type === 'message.inbound' && d.channel === 'whatsapp' && d.from &&\n  ((d.text || '').toLowerCase().includes('quiero mi plan') || picked.startsWith('plan|'));\nif (!asksPlan) return [];\nreturn [{ json: { to: d.from, channel: 'whatsapp', text: '✅ ¡Recibido! Estoy preparando tu plan con los datos de la zona; te llega en unos segundos… ⏳' } }];\n"
+      }
+    },
+    {
+      "id": "2ac2506c-800a-481c-b0e0-75a66490d259",
+      "name": "Zavu: acuse de recibo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        -40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.zavu.dev/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "eAIQnkojksjtKmL3",
+          "name": "Zavu API (QueFalta)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Zavu: mensaje entrante": {
+      "main": [
+        [
+          {
+            "node": "¿Pide un plan?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "QueFalta: decidir respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QueFalta: decidir respuesta": {
+      "main": [
+        [
+          {
+            "node": "Separar mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar mensajes": {
+      "main": [
+        [
+          {
+            "node": "Zavu: enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Pide un plan?": {
+      "main": [
+        [
+          {
+            "node": "Zavu: acuse de recibo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Same monochrome palette as the plan PDF (src/lib/planPdf.ts). */
+:root {
+  --bg: #0a0a0a;
+  --card: #f4f4f2;
+  --card-dark: #1b1b1b;
+  --tile-a: #e3e5e2;
+  --tile-b: #c9ccc7;
+  --ink: #111111;
+  --ink-soft: #6b706b;
+  --on-dark: #e7e9e6;
+  --on-dark-soft: #8c918c;
+  --headline-gray: #a4a8a3;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-dark: var(--card-dark);
+  --color-tile-a: var(--tile-a);
+  --color-tile-b: var(--tile-b);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-soft: var(--on-dark-soft);
+  --color-headline-gray: var(--headline-gray);
+  --font-sans: var(--font-inter-tight);
+}
+
+body {
+  background: var(--bg);
+  color: var(--on-dark);
+  font-family: var(--font-inter-tight), Arial, Helvetica, sans-serif;
+}
+
+/* MapLibre popups in the same style */
+.maplibregl-popup-content {
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 14px;
+  font-family: var(--font-inter-tight), Arial, sans-serif;
+  font-size: 12px;
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--card) !important;
+}
