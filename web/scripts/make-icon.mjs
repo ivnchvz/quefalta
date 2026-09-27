@@ -38,6 +38,8 @@ function markGeometry(pad) {
   const gb = glyph.bbox;
   const s = ((maxY - minY) * k * 0.46) / (gb.maxY - gb.minY);
   return {
+    // Extent of the state inside the SIZE box (used to place the wordmark next to it)
+    box: { x: ox, y: oy, w: (maxX - minX) * k, h: (maxY - minY) * k },
     state,
     question: glyph.path.toSVG(),
     // The glyph is in font units (y up): translate, then scale(s, -s).
@@ -74,6 +76,53 @@ for (const [name, svg] of Object.entries(variants)) {
 }
 writeFileSync("src/app/icon.svg", variants["quefalta-icon"]);
 await sharp(Buffer.from(variants["quefalta-icon"]), { density: 72 }).resize(180, 180).png().toFile("src/app/apple-icon.png");
+
+/** Horizontal lockup: mark + "QueFalta" (Inter Tight Medium). `bg` null = transparent. */
+function logoSvg({ bg, color, mark: markColor }) {
+  const g = markGeometry(0);
+  const markH = 400; // state height in px
+  const f = markH / g.box.h;
+  const pad = bg ? 140 : 24;
+  const font = fontkit.openSync("src/fonts/InterTight-500.ttf");
+  const run = font.layout("QueFalta");
+  const fontPx = markH * 0.72; // cap height ≈ half the state's height
+  const u = fontPx / font.unitsPerEm;
+  const textW = run.positions.reduce((w, p) => w + p.xAdvance, 0) * u;
+  const gap = markH * 0.16;
+  const width = Math.round(pad * 2 + g.box.w * f + gap + textW);
+  const height = Math.round(pad * 2 + markH);
+
+  const mx = pad - g.box.x * f;
+  const my = pad - g.box.y * f;
+  const baseline = pad + markH / 2 + (font.capHeight * u) / 2; // cap height centered on the mark
+  let x = 0;
+  const glyphs = run.glyphs
+    .map((gl, i) => {
+      const d = `<path d="${gl.path.toSVG()}" transform="translate(${x.toFixed(1)} 0)"/>`;
+      x += run.positions[i].xAdvance;
+      return d;
+    })
+    .join("");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+${bg ? `  <rect width="${width}" height="${height}" fill="${bg}"/>\n` : ""}  <g transform="translate(${mx.toFixed(1)} ${my.toFixed(1)}) scale(${f.toFixed(4)})">
+    <path d="${g.state}" fill="${color}" stroke="${color}" stroke-width="6" stroke-linejoin="round"/>
+    <path d="${g.question}" transform="translate(${g.tx} ${g.ty}) scale(${g.s} ${-g.s})" fill="${markColor}"/>
+  </g>
+  <g transform="translate(${(pad + g.box.w * f + gap).toFixed(1)} ${baseline.toFixed(1)}) scale(${u.toFixed(5)} ${(-u).toFixed(5)})" fill="${color}">${glyphs}</g>
+</svg>
+`;
+}
+
+const logos = {
+  "quefalta-logo": logoSvg({ bg: INK, color: LIGHT, mark: INK }), // on black
+  "quefalta-logo-light": logoSvg({ bg: null, color: LIGHT, mark: INK }), // transparent, for dark slides
+  "quefalta-logo-dark": logoSvg({ bg: null, color: INK, mark: "#f4f4f2" }), // transparent, for light slides
+};
+for (const [name, svg] of Object.entries(logos)) {
+  writeFileSync(`../brand/${name}.svg`, svg);
+  await sharp(Buffer.from(svg), { density: 144 }).png().toFile(`../brand/${name}.png`); // 2x for slides
+}
 
 // Tight geometry (no padding) for the inline logo in the web UI and the PDF.
 const mark = markGeometry(4);
