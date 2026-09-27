@@ -1,23 +1,27 @@
 // Presentational pieces shared by the panel views, in the same visual language as the plan PDF:
 // black background, rounded light/dark cards, outlined pills, circled arrows, light oversized numerals.
 
+import { BRAND_MARK } from "@/lib/brandMark";
 import type { Confidence } from "@/lib/engine";
 
 export const fmt = (x: number) => x.toLocaleString("es-MX");
 export const pct = (x: number) => `${Math.round(x * 100)}%`;
 
-export function Asterisk({ className = "h-3.5 w-3.5" }: { className?: string }) {
+/** QueFalta mark: Chihuahua state (currentColor) with a "?" cut in `markColor` (use the background color). */
+export function BrandMark({ className = "h-4 w-4", markColor = "var(--bg)" }: { className?: string; markColor?: string }) {
+  const m = BRAND_MARK;
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" aria-hidden>
-      <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
+    <svg viewBox={`0 0 ${m.size} ${m.size}`} className={className} aria-hidden>
+      <path d={m.state} fill="currentColor" stroke="currentColor" strokeWidth={10} strokeLinejoin="round" />
+      <path d={m.question} transform={`translate(${m.tx} ${m.ty}) scale(${m.s} ${-m.s})`} fill={markColor} />
     </svg>
   );
 }
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({ className = "", markColor }: { className?: string; markColor?: string }) {
   return (
     <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${className}`}>
-      <Asterisk />
+      <BrandMark className="h-5 w-5" markColor={markColor} />
       QueFalta
     </span>
   );

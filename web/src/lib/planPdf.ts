@@ -4,6 +4,7 @@ import PDFDocument from "pdfkit";
 import type { Analysis, CategoryResult } from "./engine";
 import { DOCUMENTS_SOURCE, VERIFIED_ON, type LaunchPlan } from "./launch";
 import type { GoogleCheck } from "./places";
+import { BRAND_MARK } from "./brandMark";
 import { googleMapsSearchUrl, googleVerdict } from "./placesShared";
 
 // Monochrome "presentation" style: black pages, rounded light/dark cards, pill labels,
@@ -67,17 +68,17 @@ export function renderPlanPdf({ analysis, result: r, plan, google = null }: Plan
   };
 
   // ---------- drawing primitives ----------
-  const asterisk = (cx: number, cy: number, size: number, color: string) => {
-    doc.save().lineCap("round").lineWidth(size * 0.28).strokeColor(color);
-    for (const deg of [0, 45, 90, 135]) {
-      const a = (deg * Math.PI) / 180;
-      doc.moveTo(cx - Math.cos(a) * size, cy - Math.sin(a) * size).lineTo(cx + Math.cos(a) * size, cy + Math.sin(a) * size).stroke();
-    }
+  /** QueFalta mark (Chihuahua state + "?", see lib/brandMark.ts), `size` points wide, top-left at (x, y). */
+  const brandMark = (x: number, y: number, size: number, color: string, markColor: string) => {
+    const m = BRAND_MARK;
+    doc.save().translate(x, y).scale(size / m.size);
+    doc.path(m.state).lineWidth(10).lineJoin("round").fillColor(color).strokeColor(color).fillAndStroke();
+    doc.translate(m.tx, m.ty).scale(m.s, -m.s).path(m.question).fill(markColor);
     doc.restore();
   };
-  const logo = (x: number, y: number, color: string) => {
-    asterisk(x + 6, y + 6, 6, color);
-    doc.font(MEDIUM).fontSize(10).fillColor(color).text("QueFalta", x + 18, y + 0.5, { lineBreak: false });
+  const logo = (x: number, y: number, color: string, background: string) => {
+    brandMark(x, y - 2, 16, color, background);
+    doc.font(MEDIUM).fontSize(10).fillColor(color).text("QueFalta", x + 21, y + 0.5, { lineBreak: false });
   };
   const pill = (x: number, y: number, label: string, style: "outline-dark" | "outline-light" | "filled") => {
     doc.font(REGULAR).fontSize(8);
@@ -122,7 +123,7 @@ export function renderPlanPdf({ analysis, result: r, plan, google = null }: Plan
 
   // ---------- page 1: cover ----------
   newPage();
-  logo(48, 46, ON_DARK);
+  logo(48, 46, ON_DARK, BG);
   pill(140, 42, "PLAN DE NEGOCIO", "outline-dark");
   arrowCircle(W - 64, 52, 18, ON_DARK);
 
@@ -165,7 +166,7 @@ export function renderPlanPdf({ analysis, result: r, plan, google = null }: Plan
   // Two centered paragraphs (pdfkit mis-positions mixed colors inside one centered paragraph).
   doc.font(REGULAR).fontSize(21).fillColor(INK).text(lead.trim(), (W - introW) / 2, M + 70, { width: introW, align: "center", lineGap: -2 });
   doc.fillColor(HEADLINE_GRAY).text(leadRest, (W - introW) / 2, doc.y + 2, { width: introW, align: "center", lineGap: -2 });
-  logo(W / 2 - 34, M + introH - 44, INK_SOFT);
+  logo(W / 2 - 34, M + introH - 44, INK_SOFT, CARD);
 
   // Executive summary card
   const sumY = M + introH + 12;
@@ -428,7 +429,7 @@ export function renderPlanPdf({ analysis, result: r, plan, google = null }: Plan
   const range = doc.bufferedPageRange();
   for (let i = 1; i < range.count; i++) {
     doc.switchToPage(range.start + i);
-    asterisk(M + 10, H - 30, 5, ON_DARK_SOFT);
+    brandMark(M + 3, H - 38, 13, ON_DARK_SOFT, BG);
     doc.font(REGULAR).fontSize(7.5).fillColor(ON_DARK_SOFT).text("Plan de negocio  |  QueFalta · Chihuahua", M + 22, H - 33.5, { lineBreak: false });
     doc.font(MEDIUM).fontSize(8).fillColor(ON_DARK).text(`P.${String(i).padStart(2, "0")}`, W - M - 60, H - 34, { width: 60, align: "right", lineBreak: false });
   }

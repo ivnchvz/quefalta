@@ -95,7 +95,7 @@ export default function OpportunityApp() {
                     Comparamos lo que hay en 1 km (~15 min caminando) con lo que zonas parecidas de la ciudad suelen tener.
                   </span>
                 </p>
-                <Logo className="mt-6 text-ink-soft" />
+                <Logo className="mt-6 text-ink-soft" markColor="var(--card)" />
               </section>
             )}
 

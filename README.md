@@ -24,6 +24,7 @@ web/          App Next.js (mapa, motor, PDF, endpoints)
   public/data/           Datos procesados que carga la app
 data-prep/    Scripts de Python que generan public/data desde los datos del INEGI
 n8n/          Workflow de WhatsApp (importable en n8n)
+brand/        Ícono (estado de Chihuahua con "?") en SVG y PNG para presentaciones
 sources.md    Fuentes consultadas
 ```
 
@@ -58,6 +59,10 @@ mkdir -p data-prep/raw/{denue,censo,marco}
 .venv/bin/python data-prep/build_data.py   # blocks, businesses, reference (+ modelos), categories
 .venv/bin/python data-prep/build_sare.py   # catálogo de giros de bajo riesgo del SARE
 ```
+
+## Marca
+
+El ícono es el contorno oficial del estado (INEGI) con un "?" en Inter Tight. `cd web && node scripts/make-icon.mjs` regenera el favicon, `src/lib/brandMark.ts` (usado por la web y el PDF) y los archivos de `brand/`.
 
 ## WhatsApp (n8n + Zavu)
 
